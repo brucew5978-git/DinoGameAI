@@ -74,5 +74,6 @@ while True:
 #Find screen
 #Press key detection function and takes a photo
 #Periodic photo taker
+#Can wrap all 3 functionalities into a class for easier use
 
 #File write function for going through data and creating csv for sorting
