@@ -47,13 +47,21 @@ class CircularQueue:
     
 
 def findScreen():
-    targetIcon = pg.locateOnScreen('reference/targetDinoGameIcon.png', confidence=0.9)
+    print("In Find Screen")
+    targetIcon = pg.locateOnScreen('reference/HighScoreCorner.jpg', confidence=0.9)
     
-    bottomCorner = pg.locateOnScreen('reference/BottomScreenCorner.jpeg', confidence=0.9)
+    bottomCorner = pg.locateOnScreen('reference/NoInternet.jpg', confidence=0.9)
+    print(targetIcon)
 
-    if(targetIcon!=None and bottomCorner!=None):
-        screenLeft, screenTop = (targetIcon.left, targetIcon.top)
-        screenRight, screenBottom = (bottomCorner.left+bottomCorner.width, bottomCorner.top+bottomCorner.height)
+    if(bottomCorner!=None):
+        screenRight, screenTop = (targetIcon.left, targetIcon.top)
+        screenLeft, screenBottom = (bottomCorner.left, bottomCorner.top)
+
+        windowWidth = screenRight-screenLeft
+        windowHeight = screenBottom-screenTop
+
+        #img = pg.screenshot(region=(screenLeft, screenTop, windowWidth, windowHeight))
+        #img.save("data/newScreenShot.png")
 
         print(f"[FIND_SCREEN] {screenRight-screenLeft}W x {screenBottom-screenTop}H")
         return {'screenLeft': screenLeft, 'screenRight': screenRight, 'screenBottom': screenBottom, 'screenTop': screenTop}
@@ -82,7 +90,6 @@ class DataCollector:
         time.sleep(5)
 
         dimensions=findScreen()
-        print(dimensions)
         self.detector = detector
         self.ID=lastImageID
 
@@ -121,46 +128,25 @@ class PDataCollector(DataCollector):
             self.isPressed = False
 
 
-dataCollector = PDataCollector(lastImageID=0, hotkey='w')
+#dataCollector = PDataCollector(lastImageID=0, hotkey='w')
+
+keyboard.add_hotkey('a', lambda: keyboard.write('Geek'))
+keyboard.add_hotkey('ctrl + shift + a', print, args =('you entered', 'hotkey'))
+  
+keyboard.wait('esc')
+
 while True:
-    if keyboard.is_pressed('p'):
+    '''if keyboard.is_pressed('0x31'):
         print('ending...')
         break
-    dataCollector.run()
+    '''
+ 
+    #dataCollector.run()
 
-'''
-class PassiveDataCollector(DataCollector):
+#Find screen
 
-    def __init__(self, sleepTime=0.1, queueSize=8, lastImageID=0, detector=KeyboardDetector()):
-        super(PassiveDataCollector, self).__init__(lastImageID, detector)
+#Press key detection function
+#File write function for storing screenshots
+#Circular queue for storing imgs
+#Use circular queue to backtrack where model should jump
 
-        self.queue=CircularQueue(queueSize)
-        self.sleepTime=sleepTime
-        self.lastTime=-1
-
-    def run(self, root='data'):
-        state=self.getGameState()
-
-        if (len(state) ==0 and time.time()-self.lastTime >= self.sleepTime*10):
-            img = self.screenshot()
-            self.queue.enqueue(img)
-            self.lastTime=time.time()
-
-        elif(len(state)!=0):
-            print('Clearing queue')
-
-            self.queue.clear()
-            time.sleep(3 * self.sleepTime)
-            self.lastTime=time.time()
-
-        if self.queue.isFull():
-            img=self.queue.dequeue()
-            self.queue.clear()
-
-            imageID='{:06d}'.format(self.ID)
-            imageName = f'{root}/images/{imageID}.jpg'
-
-            print(imageName)
-            img.save(imageName)
-            self.ID+=1
-'''

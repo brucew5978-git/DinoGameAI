@@ -41,6 +41,36 @@ def renameByIndices(baseFolder='data', graph=False):
 
 def makeSpreadsheet(outPath='images.csv', baseFolder='data'):
 
+    df_dict = {'path': [], 'label': []}
+
     labels = {
-        f'{baseFolder}'/
+        f'{baseFolder}/W': 'W'
     }
+
+    driectoryPath = baseFolder
+    for root, subfolder, path in os.walk(driectoryPath):
+        root = root.replace('\\', '/')
+        if root not in labels:
+            continue
+
+        label = labels[root]
+        if not subfolder:
+            subfolder = ['']
+        
+        for folder in subfolder:
+            if folder != '':
+                folder +='/'
+            
+            for f in path:
+                fullPath = root + '/' + folder + f
+                if isinstance(label, str):
+                    df_dict['path'].append(fullPath)
+                    df_dict['label'].append(label)
+
+                elif isinstance(label, list):
+                    for item in label:
+                        df_dict['path'].append(fullPath)
+                        df_dict['label'].append(item)
+
+    df = pd.DataFrame(df_dict)
+    df.to_csv(outPath, index=False)
