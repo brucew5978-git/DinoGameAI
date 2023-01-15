@@ -1,76 +1,42 @@
-import os
-import pandas as pd
 from torch.utils.data import Dataset
-from torchvision import transforms
-import torch
+import os
 from PIL import Image
+from torchvision import transforms
+from torch.utils.data import DataLoader
 
-def renameByIndices(baseFolder='data', graph=False):
-    
-    totalImages=0
-    folders = []
-    numbers = []
+class CustomImageDataset(Dataset):
+    def __init__(self, root_dir, labels, transform=None):
+        self.root_dir = root_dir
+        self.transform = transform
+        self.image_list = os.listdir(root_dir)
 
-    for root, subfolder, path in os.walk(baseFolder):
-        root = root.replace('\\', '/')
-        if not subfolder:
-            subfolder = ['']
-        for folder in subfolder:
-            
-            imageID = 0
+        self.labels = labels
 
-            if folder != '':
-                folder+='/'
+    def __len__(self):
+        return len(self.image_list)
 
-            for f in sorted(path):
-                oldPath = root + '/' + folder + f
-                newPath = root + '/' + folder + '{:06d}'.format(imageID) + '.jpg'
-                os.rename(oldPath, newPath)
-                imageID+=1
+    def __getitem__(self, idx):
+        img_path = os.path.join(self.root_dir, self.image_list[idx])
+        image = Image.open(img_path)
 
-            if imageID > 0:
-                print(root + '/' + folder)
-                print(imageID)
+        if self.transform:
+            image = self.transform(image)
 
-                folders.append(root + '/' + folder)
-                numbers.append(imageID)
-                totalImages+=imageID
-    
-    print('total: ', totalImages)
-    return totalImages
+        label = self.labels[idx]
+        return image, label
 
-def makeSpreadsheet(outPath='images.csv', baseFolder='data'):
 
-    df_dict = {'path': [], 'label': []}
+transforms_list = [
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+]
+transform =transforms.Compose(transforms_list)
 
-    labels = {
-        f'{baseFolder}/W': 'W'
-    }
+labels = ["0", "1"]
+imagePath = "data"
+dataset = CustomImageDataset(imagePath, labels=labels, transform=transform)
 
-    driectoryPath = baseFolder
-    for root, subfolder, path in os.walk(driectoryPath):
-        root = root.replace('\\', '/')
-        if root not in labels:
-            continue
-
-        label = labels[root]
-        if not subfolder:
-            subfolder = ['']
-        
-        for folder in subfolder:
-            if folder != '':
-                folder +='/'
-            
-            for f in path:
-                fullPath = root + '/' + folder + f
-                if isinstance(label, str):
-                    df_dict['path'].append(fullPath)
-                    df_dict['label'].append(label)
-
-                elif isinstance(label, list):
-                    for item in label:
-                        df_dict['path'].append(fullPath)
-                        df_dict['label'].append(item)
-
-    df = pd.DataFrame(df_dict)
-    df.to_csv(outPath, index=False)
+data_loader = DataLoader(dataset, batch_size=32, shuffle=True)
+print(data_loader)
