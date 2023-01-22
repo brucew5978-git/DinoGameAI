@@ -8,14 +8,8 @@ class CollectorError(Exception):
     pass
 
 class CircularQueue:
-    """
-    A FIFO Queue with a set number of items.
-    Originally made to store a buffer of images when recording gameplay.
-    In the end, it was not used for much.
-    """
 
     def __init__(self, n):
-        """Initializes a queue with length n"""
         self.n = n
         self.items = [None] * n
         self.size = 0
@@ -37,7 +31,6 @@ class CircularQueue:
         return tmp
 
     def is_full(self):
-        # We could implement with self.start/end, but I think this is faster with more space used.
         return self.size == self.n
 
     def is_empty(self):
